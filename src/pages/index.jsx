@@ -50,29 +50,31 @@ import SkillLevels from "./SkillLevels";
 
 import QuoteCreator from "./QuoteCreator";
 
-import DiscountApprovalRules from "./DiscountApprovalRules";
-
-import DiscountApprovers from "./DiscountApprovers";
-
-import Notifications from "./Notifications";
-
-import CustomerInteractions from "./CustomerInteractions";
-
 import StaffInteractions from "./StaffInteractions";
-
-import CommunicationAnalytics from "./CommunicationAnalytics";
 
 import Opportunities from "./Opportunities";
 
 import Tasks from "./Tasks";
 
+import CustomerInteractions from "./CustomerInteractions";
+
+import Notifications from "./Notifications";
+
 import Forecasting from "./Forecasting";
+
+import CommunicationAnalytics from "./CommunicationAnalytics";
+
+import DiscountApprovalRules from "./DiscountApprovalRules";
+
+import DiscountApprovers from "./DiscountApprovers";
 
 import Contracts from "./Contracts";
 
 import SalesEnablement from "./SalesEnablement";
 
 import AuditLogs from "./AuditLogs";
+
+import AuthTest from "./AuthTest";
 
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
@@ -128,23 +130,23 @@ const PAGES = {
     
     QuoteCreator: QuoteCreator,
     
-    DiscountApprovalRules: DiscountApprovalRules,
-    
-    DiscountApprovers: DiscountApprovers,
-    
-    Notifications: Notifications,
-    
-    CustomerInteractions: CustomerInteractions,
-    
     StaffInteractions: StaffInteractions,
-    
-    CommunicationAnalytics: CommunicationAnalytics,
     
     Opportunities: Opportunities,
     
     Tasks: Tasks,
     
+    CustomerInteractions: CustomerInteractions,
+    
+    Notifications: Notifications,
+    
     Forecasting: Forecasting,
+    
+    CommunicationAnalytics: CommunicationAnalytics,
+    
+    DiscountApprovalRules: DiscountApprovalRules,
+    
+    DiscountApprovers: DiscountApprovers,
     
     Contracts: Contracts,
     
@@ -152,116 +154,82 @@ const PAGES = {
     
     AuditLogs: AuditLogs,
     
-}
+    AuthTest: AuthTest,
+    
+};
 
-function _getCurrentPage(url) {
-    if (url.endsWith('/')) {
-        url = url.slice(0, -1);
+export const hashPageNames = ["leads-pipeline", "quote-creator", "staff-interactions", "customer-interactions", "communication-analytics", "discount-approval-rules", "discount-approvers", "sales-enablement", "audit-logs", "cost-components", "pricing-rules", "job-profiles", "price-requests", "skill-levels", "user-detail", "auth-test"];
+
+function getCurrentPageName() {
+    const currentUrl = window.location.href;
+    const urlObject = new URL(currentUrl);
+    const hash = urlObject.hash;
+    const search = urlObject.search;
+    const urlLastPart = urlObject.pathname.split('/').pop();
+
+    // Priority 1: Check for hash-based routing
+    if (hash) {
+        let hashValue = hash.substring(1).toLowerCase();
+        
+        // Handle hash with query parameters
+        if (hashValue.includes('?')) {
+            hashValue = hashValue.split('?')[0];
+        }
+        
+        if (hashPageNames.includes(hashValue)) {
+            // Convert kebab-case to PascalCase
+            return hashValue.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+        }
     }
-    let urlLastPart = url.split('/').pop();
-    if (urlLastPart.includes('?')) {
-        urlLastPart = urlLastPart.split('?')[0];
+
+    // Priority 2: Check for query parameter based routing
+    if (search) {
+        const params = new URLSearchParams(search);
+        const page = params.get('page');
+        if (page && Object.keys(PAGES).includes(page)) {
+            return page;
+        }
+    }
+
+    // Priority 3: Check for path-based routing
+    if (urlLastPart && urlLastPart !== '' && urlLastPart !== 'index.html') {
+        // Handle kebab-case URLs
+        if (hashPageNames.includes(urlLastPart.toLowerCase())) {
+            return urlLastPart.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+        }
+        
+        // Handle exact match
+        if (Object.keys(PAGES).includes(urlLastPart)) {
+            return urlLastPart;
+        }
+        
+        // Handle case-insensitive match
+        const pageName = Object.keys(PAGES).find(page => page.toLowerCase() === urlLastPart.toLowerCase());
+        return pageName || Object.keys(PAGES)[0];
     }
 
     const pageName = Object.keys(PAGES).find(page => page.toLowerCase() === urlLastPart.toLowerCase());
     return pageName || Object.keys(PAGES)[0];
 }
 
-// Create a wrapper component that uses useLocation inside the Router context
-function PagesContent() {
-    const location = useLocation();
-    const currentPage = _getCurrentPage(location.pathname);
-    
-    return (
-        <Layout currentPageName={currentPage}>
-            <Routes>            
-                
-                    <Route path="/" element={<Dashboard />} />
-                
-                
-                <Route path="/Dashboard" element={<Dashboard />} />
-                
-                <Route path="/PricingEngine" element={<PricingEngine />} />
-                
-                <Route path="/LeadsPipeline" element={<LeadsPipeline />} />
-                
-                <Route path="/Communications" element={<Communications />} />
-                
-                <Route path="/Quotes" element={<Quotes />} />
-                
-                <Route path="/Accounts" element={<Accounts />} />
-                
-                <Route path="/Contacts" element={<Contacts />} />
-                
-                <Route path="/Users" element={<Users />} />
-                
-                <Route path="/Settings" element={<Settings />} />
-                
-                <Route path="/Profile" element={<Profile />} />
-                
-                <Route path="/Jobs" element={<Jobs />} />
-                
-                <Route path="/Roles" element={<Roles />} />
-                
-                <Route path="/UserDetail" element={<UserDetail />} />
-                
-                <Route path="/Departments" element={<Departments />} />
-                
-                <Route path="/Branches" element={<Branches />} />
-                
-                <Route path="/Countries" element={<Countries />} />
-                
-                <Route path="/Cities" element={<Cities />} />
-                
-                <Route path="/Territories" element={<Territories />} />
-                
-                <Route path="/CostComponents" element={<CostComponents />} />
-                
-                <Route path="/PricingRules" element={<PricingRules />} />
-                
-                <Route path="/Nationalities" element={<Nationalities />} />
-                
-                <Route path="/JobProfiles" element={<JobProfiles />} />
-                
-                <Route path="/PriceRequests" element={<PriceRequests />} />
-                
-                <Route path="/SkillLevels" element={<SkillLevels />} />
-                
-                <Route path="/QuoteCreator" element={<QuoteCreator />} />
-                
-                <Route path="/DiscountApprovalRules" element={<DiscountApprovalRules />} />
-                
-                <Route path="/DiscountApprovers" element={<DiscountApprovers />} />
-                
-                <Route path="/Notifications" element={<Notifications />} />
-                
-                <Route path="/CustomerInteractions" element={<CustomerInteractions />} />
-                
-                <Route path="/StaffInteractions" element={<StaffInteractions />} />
-                
-                <Route path="/CommunicationAnalytics" element={<CommunicationAnalytics />} />
-                
-                <Route path="/Opportunities" element={<Opportunities />} />
-                
-                <Route path="/Tasks" element={<Tasks />} />
-                
-                <Route path="/Forecasting" element={<Forecasting />} />
-                
-                <Route path="/Contracts" element={<Contracts />} />
-                
-                <Route path="/SalesEnablement" element={<SalesEnablement />} />
-                
-                <Route path="/AuditLogs" element={<AuditLogs />} />
-                
-            </Routes>
-        </Layout>
-    );
-}
-
 export default function Pages() {
     return (
         <Router>
-            <PagesContent />
+            <Routes>
+                <Route path="*" element={<LayoutWithPageDetection />} />
+            </Routes>
         </Router>
+    );
+}
+
+function LayoutWithPageDetection() {
+    const location = useLocation();
+    const currentPageName = getCurrentPageName();
+    const CurrentPageComponent = PAGES[currentPageName];
+
+    return (
+        <Layout currentPageName={currentPageName}>
+            {CurrentPageComponent ? <CurrentPageComponent /> : <Dashboard />}
+        </Layout>
     );
 }

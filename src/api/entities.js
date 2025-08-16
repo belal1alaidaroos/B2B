@@ -123,16 +123,29 @@ export const User = {
   // Authentication methods
   async login(credentials) {
     const response = await api.auth.login(credentials);
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
+    console.log('Login response:', response.data); // Debug logging
+    
+    // Backend returns: { success: true, data: { token, user } }
+    // We need to access response.data.data.token
+    if (response.data?.success && response.data?.data?.token) {
+      localStorage.setItem('authToken', response.data.data.token);
+      console.log('Token stored:', response.data.data.token);
+    } else {
+      console.error('No token in login response:', response.data);
     }
     return response.data;
   },
 
   async logout() {
-    const response = await api.auth.logout();
-    localStorage.removeItem('authToken');
-    return response.data;
+    try {
+      const response = await api.auth.logout();
+      localStorage.removeItem('authToken');
+      return response.data;
+    } catch (error) {
+      // Even if logout fails on server, remove local token
+      localStorage.removeItem('authToken');
+      throw error;
+    }
   },
 
   async register(userData) {
@@ -142,12 +155,14 @@ export const User = {
 
   async me() {
     const response = await api.auth.getProfile(); // This calls /api/auth/me
-    return response.data;
+    // Backend returns: { success: true, data: { user data } }
+    return response.data?.success ? response.data.data : response.data;
   },
 
   async getProfile() {
     const response = await api.auth.getProfile(); // This calls /api/auth/me
-    return response.data;
+    // Backend returns: { success: true, data: { user data } }
+    return response.data?.success ? response.data.data : response.data;
   },
 
   async updateProfile(data) {
@@ -157,8 +172,9 @@ export const User = {
 
   async refreshToken() {
     const response = await api.auth.refreshToken();
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
+    // Handle the same nested structure for refresh token
+    if (response.data?.success && response.data?.data?.token) {
+      localStorage.setItem('authToken', response.data.data.token);
     }
     return response.data;
   },
