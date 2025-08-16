@@ -59,7 +59,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnAuthenticationFailed = context =>
             {
                 Console.WriteLine($"[DEBUG] JWT Authentication Failed: {context.Exception?.Message}");
-                return Task.CompletedTask;
+                return System.Threading.Tasks.Task.CompletedTask;
             },
             OnTokenValidated = context =>
             {
@@ -68,12 +68,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     Console.WriteLine($"[DEBUG] Validated Claim: {claim.Type} = {claim.Value}");
                 }
-                return Task.CompletedTask;
+                return System.Threading.Tasks.Task.CompletedTask;
             },
             OnChallenge = context =>
             {
                 Console.WriteLine($"[DEBUG] JWT Challenge: {context.Error}, {context.ErrorDescription}");
-                return Task.CompletedTask;
+                return System.Threading.Tasks.Task.CompletedTask;
             }
         };
     });
