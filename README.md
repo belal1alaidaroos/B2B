@@ -1,8 +1,17 @@
-# Base44 App
+# B2B Application
 
+A modern B2B management application built with React and Vite.
+This application provides comprehensive business-to-business functionality including CRM, sales management, pricing, and more.
 
-This app was created automatically by Base44.
-It's a Vite+React app that communicates with the Base44 API.
+## Features
+
+- Customer relationship management
+- Lead and opportunity tracking
+- Quote and pricing management
+- User and role management
+- Communication tracking
+- Audit logging
+- Integration capabilities
 
 ## Running the app
 
@@ -17,4 +26,12 @@ npm run dev
 npm run build
 ```
 
-For more information and support, please contact Base44 support at app@base44.com.
+## Environment Configuration
+
+Copy `.env.example` to `.env` and configure your API settings:
+
+```bash
+cp .env.example .env
+```
+
+Update the environment variables with your actual API configuration.
