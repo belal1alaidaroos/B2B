@@ -2,20 +2,21 @@ import { api } from './apiClient';
 
 // Entity classes that provide CRUD operations for each entity type
 class EntityBase {
-  constructor(entityType) {
-    this.entityType = entityType;
+  constructor(backendEntityName) {
+    this.backendEntityName = backendEntityName; // What the backend expects
   }
 
-  // Original SDK compatible methods
+  // Original SDK compatible methods - updated to use backend routes
   async list(sort = null, limit = null) {
-    let endpoint = `/${this.entityType}`;
+    let endpoint = `/api/entity/${this.backendEntityName}`;
     const params = new URLSearchParams();
     
     if (sort) {
+      // Handle sort parameter - backend expects 'sort' query param
       params.append('sort', sort);
     }
     if (limit) {
-      params.append('limit', limit);
+      params.append('pageSize', limit.toString());
     }
     
     if (params.toString()) {
@@ -27,33 +28,25 @@ class EntityBase {
   }
 
   async filter(filters = {}, sort = null, limit = null) {
-    let endpoint = `/${this.entityType}`;
-    const params = new URLSearchParams();
+    // Use the backend's filter endpoint
+    const request = {
+      filters: Object.entries(filters).map(([key, value]) => ({
+        property: key,
+        operator: 'equals', // Default operator
+        value: value
+      })),
+      page: 1,
+      pageSize: limit || 50,
+      sortBy: sort?.replace('-', ''), // Remove '-' prefix if present
+      sortDirection: sort?.startsWith('-') ? 'desc' : 'asc'
+    };
     
-    // Add filter parameters
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        params.append(key, value);
-      }
-    });
-    
-    if (sort) {
-      params.append('sort', sort);
-    }
-    if (limit) {
-      params.append('limit', limit);
-    }
-    
-    if (params.toString()) {
-      endpoint += `?${params.toString()}`;
-    }
-    
-    const response = await api.get(endpoint);
+    const response = await api.post(`/api/entity/${this.backendEntityName}/filter`, request);
     return response.data;
   }
 
   async get(id) {
-    const response = await api.getById(this.entityType, id);
+    const response = await api.get(`/api/entity/${this.backendEntityName}/${id}`);
     return response.data;
   }
 
@@ -63,22 +56,23 @@ class EntityBase {
   }
 
   async create(data) {
-    const response = await api.create(this.entityType, data);
+    const response = await api.post(`/api/entity/${this.backendEntityName}`, data);
     return response.data;
   }
 
   async update(id, data) {
-    const response = await api.update(this.entityType, id, data);
+    const response = await api.put(`/api/entity/${this.backendEntityName}/${id}`, data);
     return response.data;
   }
 
   async delete(id) {
-    const response = await api.deleteById(this.entityType, id);
+    const response = await api.delete(`/api/entity/${this.backendEntityName}/${id}`);
     return response.data;
   }
 
   async search(query) {
-    const response = await api.get(`/${this.entityType}/search?q=${encodeURIComponent(query)}`);
+    // Use filter with a search-like approach
+    const response = await api.get(`/api/entity/${this.backendEntityName}?filter=${encodeURIComponent(query)}`);
     return response.data;
   }
 
@@ -92,37 +86,37 @@ class EntityBase {
   }
 }
 
-// Create entity instances
-export const Lead = new EntityBase('leads');
-export const Quote = new EntityBase('quotes');
-export const Communication = new EntityBase('communications');
-export const JobProfile = new EntityBase('job-profiles');
-export const Account = new EntityBase('accounts');
-export const Contact = new EntityBase('contacts');
-export const SystemSetting = new EntityBase('system-settings');
-export const Permission = new EntityBase('permissions');
-export const Role = new EntityBase('roles');
-export const LayoutTemplate = new EntityBase('layout-templates');
-export const Job = new EntityBase('jobs');
-export const Country = new EntityBase('countries');
-export const City = new EntityBase('cities');
-export const Territory = new EntityBase('territories');
-export const Branch = new EntityBase('branches');
-export const Department = new EntityBase('departments');
-export const CostComponent = new EntityBase('cost-components');
-export const PricingRule = new EntityBase('pricing-rules');
-export const Nationality = new EntityBase('nationalities');
-export const PriceRequest = new EntityBase('price-requests');
-export const SkillLevel = new EntityBase('skill-levels');
-export const DiscountApprovalMatrix = new EntityBase('discount-approval-matrix');
-export const Notification = new EntityBase('notifications');
-export const CustomerInteraction = new EntityBase('customer-interactions');
-export const CustomerResponseTemplate = new EntityBase('customer-response-templates');
-export const Opportunity = new EntityBase('opportunities');
-export const Task = new EntityBase('tasks');
-export const Contract = new EntityBase('contracts');
-export const SalesMaterial = new EntityBase('sales-materials');
-export const AuditLog = new EntityBase('audit-logs');
+// Create entity instances with correct backend entity names
+export const Lead = new EntityBase('lead');
+export const Quote = new EntityBase('quote');
+export const Communication = new EntityBase('communication');
+export const JobProfile = new EntityBase('jobprofile'); // Backend uses 'jobprofile' (lowercase, no dash)
+export const Account = new EntityBase('account');
+export const Contact = new EntityBase('contact');
+export const SystemSetting = new EntityBase('systemsetting'); // Backend uses 'systemsetting'
+export const Permission = new EntityBase('permission'); // Note: Check if this exists in backend
+export const Role = new EntityBase('role');
+export const LayoutTemplate = new EntityBase('layouttemplate'); // Note: Check if this exists in backend
+export const Job = new EntityBase('job');
+export const Country = new EntityBase('country');
+export const City = new EntityBase('city');
+export const Territory = new EntityBase('territory');
+export const Branch = new EntityBase('branch');
+export const Department = new EntityBase('department');
+export const CostComponent = new EntityBase('costcomponent'); // Backend uses 'costcomponent'
+export const PricingRule = new EntityBase('pricingrule'); // Backend uses 'pricingrule'
+export const Nationality = new EntityBase('nationality');
+export const PriceRequest = new EntityBase('pricerequest'); // Backend uses 'pricerequest'
+export const SkillLevel = new EntityBase('skilllevel'); // Backend uses 'skilllevel'
+export const DiscountApprovalMatrix = new EntityBase('discountapprovalmatrix'); // Backend uses 'discountapprovalmatrix'
+export const Notification = new EntityBase('notification');
+export const CustomerInteraction = new EntityBase('customerinteraction'); // Backend uses 'customerinteraction'
+export const CustomerResponseTemplate = new EntityBase('customerresponsetemplate'); // Backend uses 'customerresponsetemplate'
+export const Opportunity = new EntityBase('opportunity');
+export const Task = new EntityBase('task');
+export const Contract = new EntityBase('contract');
+export const SalesMaterial = new EntityBase('salesmaterial'); // Backend uses 'salesmaterial'
+export const AuditLog = new EntityBase('auditlog'); // Backend uses 'auditlog'
 
 // User authentication and management with special methods
 export const User = {
@@ -147,12 +141,12 @@ export const User = {
   },
 
   async me() {
-    const response = await api.auth.getProfile();
+    const response = await api.auth.getProfile(); // This calls /api/auth/me
     return response.data;
   },
 
   async getProfile() {
-    const response = await api.auth.getProfile();
+    const response = await api.auth.getProfile(); // This calls /api/auth/me
     return response.data;
   },
 
@@ -169,16 +163,16 @@ export const User = {
     return response.data;
   },
 
-  // User management methods (compatible with old SDK)
+  // User management methods (using the entity endpoint for user CRUD)
   async list(sort = null, limit = null) {
-    let endpoint = '/users';
+    let endpoint = '/api/entity/user'; // Backend expects 'user' not 'users'
     const params = new URLSearchParams();
     
     if (sort) {
       params.append('sort', sort);
     }
     if (limit) {
-      params.append('limit', limit);
+      params.append('pageSize', limit.toString());
     }
     
     if (params.toString()) {
@@ -190,33 +184,24 @@ export const User = {
   },
 
   async filter(filters = {}, sort = null, limit = null) {
-    let endpoint = '/users';
-    const params = new URLSearchParams();
+    const request = {
+      filters: Object.entries(filters).map(([key, value]) => ({
+        property: key,
+        operator: 'equals',
+        value: value
+      })),
+      page: 1,
+      pageSize: limit || 50,
+      sortBy: sort?.replace('-', ''),
+      sortDirection: sort?.startsWith('-') ? 'desc' : 'asc'
+    };
     
-    // Add filter parameters
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        params.append(key, value);
-      }
-    });
-    
-    if (sort) {
-      params.append('sort', sort);
-    }
-    if (limit) {
-      params.append('limit', limit);
-    }
-    
-    if (params.toString()) {
-      endpoint += `?${params.toString()}`;
-    }
-    
-    const response = await api.get(endpoint);
+    const response = await api.post('/api/entity/user/filter', request);
     return response.data;
   },
 
   async get(id) {
-    const response = await api.get(`/users/${id}`);
+    const response = await api.get(`/api/entity/user/${id}`);
     return response.data;
   },
 
@@ -226,17 +211,17 @@ export const User = {
   },
 
   async create(data) {
-    const response = await api.post('/users', data);
+    const response = await api.post('/api/entity/user', data);
     return response.data;
   },
 
   async update(id, data) {
-    const response = await api.put(`/users/${id}`, data);
+    const response = await api.put(`/api/entity/user/${id}`, data);
     return response.data;
   },
 
   async delete(id) {
-    const response = await api.delete(`/users/${id}`);
+    const response = await api.delete(`/api/entity/user/${id}`);
     return response.data;
   }
 };
