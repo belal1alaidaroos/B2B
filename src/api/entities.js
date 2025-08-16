@@ -6,14 +6,60 @@ class EntityBase {
     this.entityType = entityType;
   }
 
-  async getAll(params = {}) {
-    const response = await api.getAll(this.entityType);
+  // Original SDK compatible methods
+  async list(sort = null, limit = null) {
+    let endpoint = `/${this.entityType}`;
+    const params = new URLSearchParams();
+    
+    if (sort) {
+      params.append('sort', sort);
+    }
+    if (limit) {
+      params.append('limit', limit);
+    }
+    
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+    
+    const response = await api.get(endpoint);
     return response.data;
   }
 
-  async getById(id) {
+  async filter(filters = {}, sort = null, limit = null) {
+    let endpoint = `/${this.entityType}`;
+    const params = new URLSearchParams();
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, value);
+      }
+    });
+    
+    if (sort) {
+      params.append('sort', sort);
+    }
+    if (limit) {
+      params.append('limit', limit);
+    }
+    
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+    
+    const response = await api.get(endpoint);
+    return response.data;
+  }
+
+  async get(id) {
     const response = await api.getById(this.entityType, id);
     return response.data;
+  }
+
+  async find(filters = {}) {
+    const results = await this.filter(filters);
+    return results && results.length > 0 ? results[0] : null;
   }
 
   async create(data) {
@@ -34,6 +80,15 @@ class EntityBase {
   async search(query) {
     const response = await api.get(`/${this.entityType}/search?q=${encodeURIComponent(query)}`);
     return response.data;
+  }
+
+  // New generic CRUD methods
+  async getAll(params = {}) {
+    return this.list();
+  }
+
+  async getById(id) {
+    return this.get(id);
   }
 }
 
@@ -69,8 +124,9 @@ export const Contract = new EntityBase('contracts');
 export const SalesMaterial = new EntityBase('sales-materials');
 export const AuditLog = new EntityBase('audit-logs');
 
-// User authentication and management
+// User authentication and management with special methods
 export const User = {
+  // Authentication methods
   async login(credentials) {
     const response = await api.auth.login(credentials);
     if (response.data.token) {
@@ -90,6 +146,11 @@ export const User = {
     return response.data;
   },
 
+  async me() {
+    const response = await api.auth.getProfile();
+    return response.data;
+  },
+
   async getProfile() {
     const response = await api.auth.getProfile();
     return response.data;
@@ -105,6 +166,77 @@ export const User = {
     if (response.data.token) {
       localStorage.setItem('authToken', response.data.token);
     }
+    return response.data;
+  },
+
+  // User management methods (compatible with old SDK)
+  async list(sort = null, limit = null) {
+    let endpoint = '/users';
+    const params = new URLSearchParams();
+    
+    if (sort) {
+      params.append('sort', sort);
+    }
+    if (limit) {
+      params.append('limit', limit);
+    }
+    
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+    
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  async filter(filters = {}, sort = null, limit = null) {
+    let endpoint = '/users';
+    const params = new URLSearchParams();
+    
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, value);
+      }
+    });
+    
+    if (sort) {
+      params.append('sort', sort);
+    }
+    if (limit) {
+      params.append('limit', limit);
+    }
+    
+    if (params.toString()) {
+      endpoint += `?${params.toString()}`;
+    }
+    
+    const response = await api.get(endpoint);
+    return response.data;
+  },
+
+  async get(id) {
+    const response = await api.get(`/users/${id}`);
+    return response.data;
+  },
+
+  async find(filters = {}) {
+    const results = await this.filter(filters);
+    return results && results.length > 0 ? results[0] : null;
+  },
+
+  async create(data) {
+    const response = await api.post('/users', data);
+    return response.data;
+  },
+
+  async update(id, data) {
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
+  },
+
+  async delete(id) {
+    const response = await api.delete(`/users/${id}`);
     return response.data;
   }
 };
