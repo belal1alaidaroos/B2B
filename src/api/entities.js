@@ -1,67 +1,110 @@
-import { base44 } from './base44Client';
+import { api } from './apiClient';
 
+// Entity classes that provide CRUD operations for each entity type
+class EntityBase {
+  constructor(entityType) {
+    this.entityType = entityType;
+  }
 
-export const Lead = base44.entities.Lead;
+  async getAll(params = {}) {
+    const response = await api.getAll(this.entityType);
+    return response.data;
+  }
 
-export const Quote = base44.entities.Quote;
+  async getById(id) {
+    const response = await api.getById(this.entityType, id);
+    return response.data;
+  }
 
-export const Communication = base44.entities.Communication;
+  async create(data) {
+    const response = await api.create(this.entityType, data);
+    return response.data;
+  }
 
-export const JobProfile = base44.entities.JobProfile;
+  async update(id, data) {
+    const response = await api.update(this.entityType, id, data);
+    return response.data;
+  }
 
-export const Account = base44.entities.Account;
+  async delete(id) {
+    const response = await api.deleteById(this.entityType, id);
+    return response.data;
+  }
 
-export const Contact = base44.entities.Contact;
+  async search(query) {
+    const response = await api.get(`/${this.entityType}/search?q=${encodeURIComponent(query)}`);
+    return response.data;
+  }
+}
 
-export const SystemSetting = base44.entities.SystemSetting;
+// Create entity instances
+export const Lead = new EntityBase('leads');
+export const Quote = new EntityBase('quotes');
+export const Communication = new EntityBase('communications');
+export const JobProfile = new EntityBase('job-profiles');
+export const Account = new EntityBase('accounts');
+export const Contact = new EntityBase('contacts');
+export const SystemSetting = new EntityBase('system-settings');
+export const Permission = new EntityBase('permissions');
+export const Role = new EntityBase('roles');
+export const LayoutTemplate = new EntityBase('layout-templates');
+export const Job = new EntityBase('jobs');
+export const Country = new EntityBase('countries');
+export const City = new EntityBase('cities');
+export const Territory = new EntityBase('territories');
+export const Branch = new EntityBase('branches');
+export const Department = new EntityBase('departments');
+export const CostComponent = new EntityBase('cost-components');
+export const PricingRule = new EntityBase('pricing-rules');
+export const Nationality = new EntityBase('nationalities');
+export const PriceRequest = new EntityBase('price-requests');
+export const SkillLevel = new EntityBase('skill-levels');
+export const DiscountApprovalMatrix = new EntityBase('discount-approval-matrix');
+export const Notification = new EntityBase('notifications');
+export const CustomerInteraction = new EntityBase('customer-interactions');
+export const CustomerResponseTemplate = new EntityBase('customer-response-templates');
+export const Opportunity = new EntityBase('opportunities');
+export const Task = new EntityBase('tasks');
+export const Contract = new EntityBase('contracts');
+export const SalesMaterial = new EntityBase('sales-materials');
+export const AuditLog = new EntityBase('audit-logs');
 
-export const Permission = base44.entities.Permission;
+// User authentication and management
+export const User = {
+  async login(credentials) {
+    const response = await api.auth.login(credentials);
+    if (response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+    }
+    return response.data;
+  },
 
-export const Role = base44.entities.Role;
+  async logout() {
+    const response = await api.auth.logout();
+    localStorage.removeItem('authToken');
+    return response.data;
+  },
 
-export const LayoutTemplate = base44.entities.LayoutTemplate;
+  async register(userData) {
+    const response = await api.auth.register(userData);
+    return response.data;
+  },
 
-export const Job = base44.entities.Job;
+  async getProfile() {
+    const response = await api.auth.getProfile();
+    return response.data;
+  },
 
-export const Country = base44.entities.Country;
+  async updateProfile(data) {
+    const response = await api.auth.updateProfile(data);
+    return response.data;
+  },
 
-export const City = base44.entities.City;
-
-export const Territory = base44.entities.Territory;
-
-export const Branch = base44.entities.Branch;
-
-export const Department = base44.entities.Department;
-
-export const CostComponent = base44.entities.CostComponent;
-
-export const PricingRule = base44.entities.PricingRule;
-
-export const Nationality = base44.entities.Nationality;
-
-export const PriceRequest = base44.entities.PriceRequest;
-
-export const SkillLevel = base44.entities.SkillLevel;
-
-export const DiscountApprovalMatrix = base44.entities.DiscountApprovalMatrix;
-
-export const Notification = base44.entities.Notification;
-
-export const CustomerInteraction = base44.entities.CustomerInteraction;
-
-export const CustomerResponseTemplate = base44.entities.CustomerResponseTemplate;
-
-export const Opportunity = base44.entities.Opportunity;
-
-export const Task = base44.entities.Task;
-
-export const Contract = base44.entities.Contract;
-
-export const SalesMaterial = base44.entities.SalesMaterial;
-
-export const AuditLog = base44.entities.AuditLog;
-
-
-
-// auth sdk:
-export const User = base44.auth;
+  async refreshToken() {
+    const response = await api.auth.refreshToken();
+    if (response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+    }
+    return response.data;
+  }
+};
