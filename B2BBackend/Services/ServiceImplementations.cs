@@ -104,8 +104,11 @@ namespace B2BBackend.Services
             
             var claims = new List<Claim>
             {
-                new Claim("sub", user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id), // This maps to "sub" in JWT
+                new Claim("sub", user.Id), // Keep this for compatibility
+                new Claim(ClaimTypes.Email, user.Email),
                 new Claim("email", user.Email),
+                new Claim(ClaimTypes.Name, user.FullName),
                 new Claim("name", user.FullName),
                 new Claim("roles", user.Roles),
                 new Claim("permissions", user.Permissions)

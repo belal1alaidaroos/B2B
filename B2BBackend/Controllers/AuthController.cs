@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using B2BBackend.Models;
 using B2BBackend.Services;
 
@@ -56,9 +57,20 @@ namespace B2BBackend.Controllers
         [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var userId = User.FindFirst("sub")?.Value;
+            // Debug logging
+            Console.WriteLine($"[DEBUG] User.Identity.IsAuthenticated: {User.Identity?.IsAuthenticated}");
+            Console.WriteLine($"[DEBUG] User.Claims count: {User.Claims?.Count()}");
+            foreach (var claim in User.Claims ?? Enumerable.Empty<System.Security.Claims.Claim>())
+            {
+                Console.WriteLine($"[DEBUG] Claim: {claim.Type} = {claim.Value}");
+            }
+            
+                var userId = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    Console.WriteLine($"[DEBUG] Extracted userId from claims: {userId}");
+            
             if (userId == null)
             {
+                Console.WriteLine("[DEBUG] No 'sub' claim found - returning Invalid token");
                 return Unauthorized(new { success = false, message = "Invalid token" });
             }
 
@@ -74,22 +86,13 @@ namespace B2BBackend.Controllers
                     user.Id, 
                     user.Email, 
                     user.FullName, 
-                    user.FirstName,
-                    user.LastName,
-                    user.ProfilePicture,
-                    user.Phone,
-                    user.Status,
-                    user.Position,
-                    user.Department,
-                    user.Branch,
-                    user.Territory,
-                    user.Country,
-                    user.City,
+                    user.FirstName, 
+                    user.LastName, 
+                    user.Status, 
                     user.Roles, 
-                    user.Permissions,
-                    user.Language,
-                    user.TimeZone,
-                    user.LastLogin
+                    user.Permissions, 
+                    user.Language, 
+                    user.TimeZone 
                 } 
             });
         }
