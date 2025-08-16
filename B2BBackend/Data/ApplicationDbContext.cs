@@ -313,26 +313,8 @@ namespace B2BBackend.Data
                 }
             );
 
-            // Seed default admin user with proper BCrypt hash
-            // NOTE: Password is "admin123" - Change this in production!
-            modelBuilder.Entity<User>().HasData(
-                new User
-                {
-                    Id = "user_admin",
-                    Email = "admin@company.com",
-                    FullName = "System Administrator",
-                    FirstName = "System",
-                    LastName = "Administrator",
-                    Status = "active",
-                    PasswordHash = "$2a$11$FLVJW7vR2jFCJ6WJ1JGz6eP3lG8vUnGKM8TF6U6Q7LZHv8N9w9h2S", // BCrypt hash for "admin123"
-                    Roles = "[\"role_admin\"]",
-                    Permissions = "[\"*\"]",
-                    Language = "en",
-                    IsEmailVerified = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                }
-            );
+            // Admin user is now created in Program.cs InitializeDatabaseAsync method
+            // This ensures proper password hashing using UserService
 
             // Seed some basic countries
             modelBuilder.Entity<Country>().HasData(
