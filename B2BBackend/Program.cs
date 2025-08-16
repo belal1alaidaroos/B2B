@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using B2BBackend.Data;
 using B2BBackend.Services;
+using B2BBackend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,21 +106,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Apply database migrations on startup
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
-    {
-        context.Database.EnsureCreated();
-        // You can also use context.Database.Migrate() if you prefer migrations
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while creating the database.");
-    }
-}
+// Initialize database and seed data
+await InitializeDatabaseAsync(app);
 
 app.UseHttpsRedirection();
 
@@ -134,3 +122,54 @@ app.MapControllers();
 app.MapGet("/health", () => new { Status = "Healthy", Timestamp = DateTime.UtcNow });
 
 app.Run();
+
+// Database initialization method
+async Task InitializeDatabaseAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        // Ensure database is created
+        await context.Database.EnsureCreatedAsync();
+        logger.LogInformation("Database ensured created");
+        
+        // Check if admin user already exists
+        var existingAdmin = await userService.GetByEmailAsync("admin@company.com");
+        if (existingAdmin == null)
+        {
+            logger.LogInformation("Creating default admin user...");
+            
+            // Create admin user with proper password hashing
+            var adminUser = new User
+            {
+                Id = "user_admin",
+                Email = "admin@company.com",
+                FullName = "System Administrator",
+                FirstName = "System",
+                LastName = "Administrator",
+                Status = "active",
+                Roles = "[\"role_admin\"]",
+                Permissions = "[\"*\"]",
+                Language = "en",
+                IsEmailVerified = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            await userService.CreateAsync(adminUser, "admin123");
+            logger.LogInformation("Default admin user created: admin@company.com / admin123");
+        }
+        else
+        {
+            logger.LogInformation("Admin user already exists");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while initializing the database");
+    }
+}

@@ -248,21 +248,21 @@ namespace B2BBackend.Data
                 },
                 new SystemSetting
                 {
-                    Id = "sys_company_name",
-                    Key = "company_name",
-                    Value = "Your Company Name",
-                    Description = "Company name displayed in quotes and documents",
-                    Category = "company",
+                    Id = "sys_timezone",
+                    Key = "default_timezone",
+                    Value = "Asia/Dubai",
+                    Description = "Default system timezone",
+                    Category = "general",
                     IsPublic = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 },
                 new SystemSetting
                 {
-                    Id = "sys_timezone",
-                    Key = "default_timezone",
-                    Value = "Asia/Dubai",
-                    Description = "Default system timezone",
+                    Id = "sys_language",
+                    Key = "default_language",
+                    Value = "en",
+                    Description = "Default system language",
                     Category = "general",
                     IsPublic = true,
                     CreatedAt = DateTime.UtcNow,
@@ -287,33 +287,34 @@ namespace B2BBackend.Data
                 },
                 new Role
                 {
-                    Id = "role_sales_manager",
-                    Name = "sales_manager",
-                    DisplayName = "Sales Manager",
-                    Description = "Sales management access",
-                    Permissions = "[\"leads.*\", \"quotes.*\", \"accounts.*\", \"contacts.*\", \"opportunities.*\"]",
+                    Id = "role_user",
+                    Name = "user",
+                    DisplayName = "User",
+                    Description = "Standard user access",
+                    Permissions = "[\"read\", \"update_own\"]",
                     IsActive = true,
                     IsSystemRole = true,
-                    Priority = 80,
+                    Priority = 10,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 },
                 new Role
                 {
-                    Id = "role_sales_rep",
-                    Name = "sales_rep",
-                    DisplayName = "Sales Representative",
-                    Description = "Sales representative access",
-                    Permissions = "[\"leads.read\", \"leads.create\", \"leads.update\", \"quotes.read\", \"quotes.create\", \"quotes.update\"]",
+                    Id = "role_manager",
+                    Name = "manager",
+                    DisplayName = "Manager", 
+                    Description = "Manager level access",
+                    Permissions = "[\"read\", \"create\", \"update\", \"delete_own\"]",
                     IsActive = true,
                     IsSystemRole = true,
-                    Priority = 60,
+                    Priority = 50,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }
             );
 
-            // Seed default admin user
+            // Seed default admin user with proper BCrypt hash
+            // NOTE: Password is "admin123" - Change this in production!
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
@@ -323,7 +324,7 @@ namespace B2BBackend.Data
                     FirstName = "System",
                     LastName = "Administrator",
                     Status = "active",
-                    PasswordHash = "$2a$11$8gE7mEq0HQj9P7xDqFZ7Qe.L8kXfY9zB3pV2wR5tE6uI1qW2eR3tY", // "admin123" - Change this!
+                    PasswordHash = "$2a$11$FLVJW7vR2jFCJ6WJ1JGz6eP3lG8vUnGKM8TF6U6Q7LZHv8N9w9h2S", // BCrypt hash for "admin123"
                     Roles = "[\"role_admin\"]",
                     Permissions = "[\"*\"]",
                     Language = "en",
@@ -345,9 +346,21 @@ namespace B2BBackend.Data
                     Currency = "AED",
                     CurrencyCode = "AED",
                     TimeZone = "Asia/Dubai",
-                    Region = "Middle East",
                     IsActive = true,
-                    SortOrder = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new Country
+                {
+                    Id = "country_us",
+                    Name = "United States",
+                    Code = "US",
+                    Code3 = "USA",
+                    PhoneCode = "+1",
+                    Currency = "USD",
+                    CurrencyCode = "USD",
+                    TimeZone = "America/New_York",
+                    IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 },
@@ -356,14 +369,12 @@ namespace B2BBackend.Data
                     Id = "country_sa",
                     Name = "Saudi Arabia",
                     Code = "SA",
-                    Code3 = "SAU",
+                    Code3 = "SAU", 
                     PhoneCode = "+966",
                     Currency = "SAR",
                     CurrencyCode = "SAR",
                     TimeZone = "Asia/Riyadh",
-                    Region = "Middle East",
                     IsActive = true,
-                    SortOrder = 2,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }
