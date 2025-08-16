@@ -5,6 +5,7 @@ using System.Text;
 using B2BBackend.Data;
 using B2BBackend.Services;
 using B2BBackend.Models;
+using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -124,7 +125,7 @@ app.MapGet("/health", () => new { Status = "Healthy", Timestamp = DateTime.UtcNo
 app.Run();
 
 // Database initialization method
-async Task InitializeDatabaseAsync(WebApplication app)
+static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
