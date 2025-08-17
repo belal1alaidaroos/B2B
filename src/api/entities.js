@@ -24,6 +24,11 @@ class EntityBase {
     }
     
     const response = await api.get(endpoint);
+    // Backend returns: { success: true, data: { items: [...], totalCount, etc. } }
+    // Extract just the items array for frontend compatibility
+    if (response.data?.success && response.data?.data?.items) {
+      return response.data.data.items;
+    }
     return response.data;
   }
 
@@ -42,11 +47,21 @@ class EntityBase {
     };
     
     const response = await api.post(`/api/entity/${this.backendEntityName}/filter`, request);
+    // Backend returns: { success: true, data: { items: [...], totalCount, etc. } }
+    // Extract just the items array for frontend compatibility
+    if (response.data?.success && response.data?.data?.items) {
+      return response.data.data.items;
+    }
     return response.data;
   }
 
   async get(id) {
     const response = await api.get(`/api/entity/${this.backendEntityName}/${id}`);
+    // Backend returns: { success: true, data: {...} } for individual entities
+    // Extract just the entity data for frontend compatibility
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
     return response.data;
   }
 
@@ -57,22 +72,42 @@ class EntityBase {
 
   async create(data) {
     const response = await api.post(`/api/entity/${this.backendEntityName}`, data);
+    // Backend returns: { success: true, data: {...} }
+    // Extract just the entity data for frontend compatibility
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
     return response.data;
   }
 
   async update(id, data) {
     const response = await api.put(`/api/entity/${this.backendEntityName}/${id}`, data);
+    // Backend returns: { success: true, data: {...} }
+    // Extract just the entity data for frontend compatibility
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
     return response.data;
   }
 
   async delete(id) {
     const response = await api.delete(`/api/entity/${this.backendEntityName}/${id}`);
+    // Backend returns: { success: true, data: null, message: "..." }
+    // For delete, we can return the success status or the original response
+    if (response.data?.success) {
+      return { success: true };
+    }
     return response.data;
   }
 
   async search(query) {
     // Use filter with a search-like approach
     const response = await api.get(`/api/entity/${this.backendEntityName}?filter=${encodeURIComponent(query)}`);
+    // Backend returns: { success: true, data: { items: [...] } }
+    // Extract just the items array for frontend compatibility
+    if (response.data?.success && response.data?.data?.items) {
+      return response.data.data.items;
+    }
     return response.data;
   }
 
@@ -196,6 +231,11 @@ export const User = {
     }
     
     const response = await api.get(endpoint);
+    // Backend returns: { success: true, data: { items: [...] } }
+    // Extract just the items array for frontend compatibility
+    if (response.data?.success && response.data?.data?.items) {
+      return response.data.data.items;
+    }
     return response.data;
   },
 
@@ -213,11 +253,21 @@ export const User = {
     };
     
     const response = await api.post('/api/entity/user/filter', request);
+    // Backend returns: { success: true, data: { items: [...] } }
+    // Extract just the items array for frontend compatibility
+    if (response.data?.success && response.data?.data?.items) {
+      return response.data.data.items;
+    }
     return response.data;
   },
 
   async get(id) {
     const response = await api.get(`/api/entity/user/${id}`);
+    // Backend returns: { success: true, data: {...} } for individual entities
+    // Extract just the entity data for frontend compatibility
+    if (response.data?.success && response.data?.data) {
+      return response.data.data;
+    }
     return response.data;
   },
 
