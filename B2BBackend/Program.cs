@@ -182,17 +182,27 @@ static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication 
     try
     {
         // Apply database migrations for SQL Server
-        try 
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
+        
+        logger.LogInformation("Pending migrations: {Count}", pendingMigrations.Count());
+        logger.LogInformation("Applied migrations: {Count}", appliedMigrations.Count());
+        
+        if (pendingMigrations.Any())
         {
+            logger.LogInformation("Applying {Count} pending migrations...", pendingMigrations.Count());
             await context.Database.MigrateAsync();
             logger.LogInformation("Database migrations applied successfully");
         }
-        catch (Exception migrationEx)
+        else if (!appliedMigrations.Any())
         {
-            logger.LogWarning("Migration failed, falling back to EnsureCreated: {Error}", migrationEx.Message);
-            // Fallback to EnsureCreated if migrations don't exist
+            logger.LogWarning("No migrations found. Using EnsureCreated to create database schema...");
             await context.Database.EnsureCreatedAsync();
-            logger.LogInformation("Database ensured created (fallback method)");
+            logger.LogInformation("Database schema created using EnsureCreated");
+        }
+        else
+        {
+            logger.LogInformation("Database is up to date (no pending migrations)");
         }
         
         // Check if admin user already exists
