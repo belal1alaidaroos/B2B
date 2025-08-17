@@ -13,10 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Configure Entity Framework with SQLite
+// Configure Entity Framework with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-                      "Data Source=b2b_database.db"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+                        "Server=localhost;Database=B2BDatabase;Trusted_Connection=true;TrustServerCertificate=true;"));
 
 // Configure CORS for frontend communication
 builder.Services.AddCors(options =>
@@ -163,9 +163,9 @@ static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication 
     
     try
     {
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
-        logger.LogInformation("Database ensured created");
+        // Apply database migrations for SQL Server
+        await context.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied successfully");
         
         // Check if admin user already exists
         var existingAdmin = await userService.GetByEmailAsync("admin@company.com");
