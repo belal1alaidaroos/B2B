@@ -60,42 +60,107 @@ namespace B2BBackend.Controllers
         {
             try
             {
-                var query = GetEntityQuery(entityType);
-                if (query == null)
+                // Handle each entity type specifically to maintain type safety
+                return entityType.ToLower() switch
                 {
-                    return NotFound($"Entity type '{entityType}' not found");
-                }
-                
-                // Apply filters from the request
-                if (request.Filters != null && request.Filters.Any())
-                {
-                    foreach (var filter in request.Filters)
-                    {
-                        query = ApplyPropertyFilter(query, filter.Property, filter.Value, filter.Operator ?? "equals");
-                    }
-                }
-
-                // Apply sorting
-                if (!string.IsNullOrEmpty(request.SortBy))
-                {
-                    query = ApplySort(query, request.SortBy, request.SortDirection ?? "asc");
-                }
-
-                var totalCount = await query.CountAsync();
-                var items = await query.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToListAsync();
-
-                return Success(new { 
-                    items, 
-                    totalCount, 
-                    page = request.Page, 
-                    pageSize = request.PageSize, 
-                    totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize) 
-                });
+                    "notification" => await FilterNotifications(request),
+                    _ => await FilterGeneric(entityType, request)
+                };
             }
             catch (Exception ex)
             {
                 return Error($"Failed to filter {entityType}: {ex.Message}");
             }
+        }
+
+        private async Task<IActionResult> FilterNotifications(FilterRequest request)
+        {
+            var query = _context.Notifications.AsQueryable();
+
+            // Apply filters specific to Notification entity
+            if (request.Filters != null && request.Filters.Any())
+            {
+                foreach (var filter in request.Filters)
+                {
+                    switch (filter.Property.ToLower())
+                    {
+                        case "isread":
+                            if (bool.TryParse(filter.Value, out bool isRead))
+                            {
+                                query = query.Where(n => n.IsRead == isRead);
+                            }
+                            break;
+                        case "recipientuserid":
+                            query = query.Where(n => n.RecipientUserId == filter.Value);
+                            break;
+                        case "type":
+                            query = query.Where(n => n.Type == filter.Value);
+                            break;
+                        case "priority":
+                            query = query.Where(n => n.Priority == filter.Value);
+                            break;
+                    }
+                }
+            }
+
+            // Apply sorting
+            if (!string.IsNullOrEmpty(request.SortBy))
+            {
+                switch (request.SortBy.ToLower())
+                {
+                    case "createdat":
+                    case "created_date":
+                        query = request.SortDirection?.ToLower() == "desc" 
+                            ? query.OrderByDescending(n => n.CreatedAt)
+                            : query.OrderBy(n => n.CreatedAt);
+                        break;
+                    case "updatedat":
+                        query = request.SortDirection?.ToLower() == "desc" 
+                            ? query.OrderByDescending(n => n.UpdatedAt)
+                            : query.OrderBy(n => n.UpdatedAt);
+                        break;
+                    default:
+                        query = query.OrderByDescending(n => n.CreatedAt); // Default sort
+                        break;
+                }
+            }
+            else
+            {
+                query = query.OrderByDescending(n => n.CreatedAt); // Default sort
+            }
+
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToListAsync();
+
+            return Success(new { 
+                items, 
+                totalCount, 
+                page = request.Page, 
+                pageSize = request.PageSize, 
+                totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize) 
+            });
+        }
+
+        private async Task<IActionResult> FilterGeneric(string entityType, FilterRequest request)
+        {
+            var query = GetEntityQuery(entityType);
+            if (query == null)
+            {
+                return NotFound($"Entity type '{entityType}' not found");
+            }
+
+            // For now, just return all items without filtering for other entities
+            // This can be expanded later for other entity types
+            var totalCount = await query.CountAsync();
+            var items = await query.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize).ToListAsync();
+
+            return Success(new { 
+                items, 
+                totalCount, 
+                page = request.Page, 
+                pageSize = request.PageSize, 
+                totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize) 
+            });
         }
 
         // Create method
@@ -362,18 +427,7 @@ namespace B2BBackend.Controllers
             return query;
         }
 
-        private IQueryable<object> ApplyPropertyFilter(IQueryable<object> query, string property, string value, string operatorType)
-        {
-            // This would need to be implemented based on the specific property types and operators
-            // For now, return the original query
-            return query;
-        }
 
-        private IQueryable<object> ApplySort(IQueryable<object> query, string sortBy, string direction)
-        {
-            // Basic sorting implementation
-            return query;
-        }
 
         private object? CreateEntityFromJson(string entityType, JsonElement data)
         {

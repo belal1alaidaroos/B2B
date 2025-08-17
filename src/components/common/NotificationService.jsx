@@ -10,32 +10,28 @@ import { User } from '@/api/entities';
  * @param {string} options.title - The notification title.
  * @param {string} options.message - The notification message.
  * @param {string} [options.action_url] - URL to navigate to.
- * @param {string} [options.recipient_user_id] - Specific user to notify.
+ * @param {string} [options.recipient_user_id] - Specific user to notify (legacy).
+ * @param {string} [options.RecipientUserId] - Specific user to notify.
  * @param {string} [options.recipient_role_id] - Specific role to notify.
  */
 export const createNotification = async (options) => {
   try {
     const currentUser = await User.me();
     
-    // In a real scenario, if recipient_role_id is provided, you'd fetch all users with that role.
-    // Here we simplify: if no specific user, we assume it's for an admin or manager,
-    // which the notification bell component can later filter.
-    // For this demo, we'll create a single notification and assign it to a placeholder if no user is specified.
-    
-    const recipientId = options.recipient_user_id || 'system_notification_recipient'; // Placeholder
+    // Handle both old snake_case and new PascalCase parameter names for backward compatibility
+    const recipientId = options.RecipientUserId || options.recipient_user_id || 'system_notification_recipient';
+    const senderId = options.SenderUserId || options.sender_user_id || currentUser?.id;
 
     const notificationData = {
-      recipient_user_id: recipientId,
-      sender_user_id: currentUser.id,
-      type: options.type,
-      title: options.title,
-      message: options.message,
-      data: {
-          ...options.data,
-          recipient_role_id: options.recipient_role_id, // Store the role for filtering
-      },
-      action_url: options.action_url,
-      is_read: false,
+      RecipientUserId: recipientId,
+      SenderUserId: senderId,
+      Type: options.type,
+      Title: options.title,
+      Message: options.message,
+      Data: JSON.stringify(options.data || {}),
+      Priority: options.priority || 'medium',
+      IsRead: false,
+      ActionUrl: options.action_url
     };
 
     await Notification.create(notificationData);
