@@ -182,8 +182,18 @@ static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication 
     try
     {
         // Apply database migrations for SQL Server
-        await context.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully");
+        try 
+        {
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully");
+        }
+        catch (Exception migrationEx)
+        {
+            logger.LogWarning("Migration failed, falling back to EnsureCreated: {Error}", migrationEx.Message);
+            // Fallback to EnsureCreated if migrations don't exist
+            await context.Database.EnsureCreatedAsync();
+            logger.LogInformation("Database ensured created (fallback method)");
+        }
         
         // Check if admin user already exists
         var existingAdmin = await userService.GetByEmailAsync("admin@company.com");
