@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Edit, Trash2, Award, Power, PowerOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
@@ -207,6 +207,9 @@ export default function SkillLevelsPage() {
             <DialogTitle>
               {editingSkillLevel ? 'Edit Skill Level' : 'Add New Skill Level'}
             </DialogTitle>
+            <DialogDescription>
+              {editingSkillLevel ? 'Update the skill level information below.' : 'Create a new skill level by filling in the details below.'}
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>

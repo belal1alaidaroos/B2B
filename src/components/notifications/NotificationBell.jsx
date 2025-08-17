@@ -42,13 +42,13 @@ export default function NotificationBell() {
         
         // Fetch notifications for this user OR notifications for one of the user's roles
         // This is a simplified client-side filter. A real implementation should do this on the backend.
-        const allSystemNotifications = await Notification.filter({ is_read: false }, '-created_date', 20);
+        const allSystemNotifications = await Notification.filter({ IsRead: false }, '-CreatedAt', 20);
         
         const userNotifications = allSystemNotifications.filter(n => {
-            const isForMe = n.recipient_user_id === user.id;
-            const isForMyRole = n.data?.recipient_role_id && user.roles?.includes(n.data.recipient_role_id);
+            const isForMe = n.RecipientUserId === user.id;
+            const isForMyRole = n.Data?.recipient_role_id && user.roles?.includes(n.Data.recipient_role_id);
             // "system_notification_recipient" is a catch-all for role-based notifications
-            const isCatchAllForMyRole = n.recipient_user_id === 'system_notification_recipient' && isForMyRole;
+            const isCatchAllForMyRole = n.RecipientUserId === 'system_notification_recipient' && isForMyRole;
 
             return isForMe || isCatchAllForMyRole;
         });
