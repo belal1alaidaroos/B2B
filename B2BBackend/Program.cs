@@ -343,35 +343,28 @@ static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication 
     
     try
     {
-        // Automatically handle database creation - no manual steps required
-        logger.LogInformation("Initializing database automatically...");
+        // Apply database migrations for SQL Server
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
         
-        try
+        logger.LogInformation("Pending migrations: {Count}", pendingMigrations.Count());
+        logger.LogInformation("Applied migrations: {Count}", appliedMigrations.Count());
+        
+        if (pendingMigrations.Any())
         {
-            // Try migrations first
-            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-            
-            if (pendingMigrations.Any())
-            {
-                logger.LogInformation("Applying {Count} pending migrations...", pendingMigrations.Count());
-                await context.Database.MigrateAsync();
-                logger.LogInformation("Database migrations applied successfully");
-            }
-            else
-            {
-                // No migrations exist or all applied - ensure database exists
-                await context.Database.EnsureCreatedAsync();
-                logger.LogInformation("Database ensured created");
-            }
+            logger.LogInformation("Applying {Count} pending migrations...", pendingMigrations.Count());
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully");
         }
-        catch (Exception migrationEx)
+        else if (!appliedMigrations.Any())
         {
-            logger.LogWarning("Migration approach failed: {Error}", migrationEx.Message);
-            logger.LogInformation("Falling back to EnsureCreated for automatic setup...");
-            
-            // Fallback: Just create the database and tables
+            logger.LogWarning("No migrations found. Using EnsureCreated to create database schema...");
             await context.Database.EnsureCreatedAsync();
-            logger.LogInformation("Database created successfully using EnsureCreated");
+            logger.LogInformation("Database schema created using EnsureCreated");
+        }
+        else
+        {
+            logger.LogInformation("Database is up to date (no pending migrations)");
         }
         
         // Check if admin user already exists

@@ -54,7 +54,8 @@ namespace B2BBackend.Data
             // Configure default values and constraints
             ConfigureDefaults(modelBuilder);
 
-            // Seeding handled in Program.cs runtime - no static seeding in migrations
+            // Note: Seeding moved to Program.cs to avoid dynamic date issues in migrations
+            // SeedInitialData(modelBuilder);
         }
 
         private void ConfigureDecimalPrecision(ModelBuilder modelBuilder)
