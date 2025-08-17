@@ -382,7 +382,7 @@ export default function Layout({ children, currentPageName }) {
       </div>
 
       {/* Custom Clay Staff Theme CSS */}
-      <style jsx global>{`
+      <style>{`
         .clay-primary-gradient {
           background: linear-gradient(135deg, #8B5A3C 0%, #A0724E 100%);
         }
