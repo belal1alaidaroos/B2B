@@ -40,26 +40,36 @@ export default function NotificationBell() {
     const fetchNotifications = async (user) => {
         if (!user) return;
         
-        // Fetch notifications for this user OR notifications for one of the user's roles
-        // This is a simplified client-side filter. A real implementation should do this on the backend.
-        const allSystemNotifications = await Notification.filter({ is_read: false }, '-created_date', 20);
-        
-        const userNotifications = allSystemNotifications.filter(n => {
-            const isForMe = n.recipient_user_id === user.id;
-            const isForMyRole = n.data?.recipient_role_id && user.roles?.includes(n.data.recipient_role_id);
-            // "system_notification_recipient" is a catch-all for role-based notifications
-            const isCatchAllForMyRole = n.recipient_user_id === 'system_notification_recipient' && isForMyRole;
+        try {
+            // Fetch notifications for this user OR notifications for one of the user's roles
+            // This is a simplified client-side filter. A real implementation should do this on the backend.
+            const allSystemNotifications = await Notification.filter({ IsRead: false }, '-created_date', 20);
+            
+            // Ensure we have an array to work with
+            const notifications = Array.isArray(allSystemNotifications) ? allSystemNotifications : [];
+            
+            const userNotifications = notifications.filter(n => {
+                const isForMe = n.RecipientUserId === user.id;
+                const isForMyRole = n.data?.recipient_role_id && user.roles?.includes(n.data.recipient_role_id);
+                // "system_notification_recipient" is a catch-all for role-based notifications
+                const isCatchAllForMyRole = n.RecipientUserId === 'system_notification_recipient' && isForMyRole;
 
-            return isForMe || isCatchAllForMyRole;
-        });
+                return isForMe || isCatchAllForMyRole;
+            });
 
-        setNotifications(userNotifications);
-        setUnreadCount(userNotifications.length);
+            setNotifications(userNotifications);
+            setUnreadCount(userNotifications.length);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+            // Set empty arrays on error to prevent UI issues
+            setNotifications([]);
+            setUnreadCount(0);
+        }
     };
 
     const handleMarkAsRead = async (id) => {
         try {
-            await Notification.update(id, { is_read: true });
+            await Notification.update(id, { IsRead: true });
             fetchNotifications(currentUser);
         } catch (error) {
             console.error("Failed to mark notification as read", error);
