@@ -39,25 +39,26 @@ export const NotificationService = {
 
       // Send notification to each approver
       const notifications = approverUsers.map(approver => ({
-        recipient_user_id: approver.id,
-        sender_user_id: requestedByUserId,
-        type: 'discount_request',
-        title: `Discount Approval Required: ${quoteName}`,
-        message: `A ${discountPercentage}% discount has been requested for ${discountType} on quote ${quoteName}. Justification: ${justification}`,
-        data: {
+        RecipientUserId: approver.id,
+        SenderUserId: requestedByUserId,
+        Type: 'discount_request',
+        Title: `Discount Approval Required: ${quoteName}`,
+        Message: `A ${discountPercentage}% discount has been requested for ${discountType} on quote ${quoteName}. Justification: ${justification}`,
+        Data: JSON.stringify({
           quote_id: quoteId,
           discount_type: discountType,
           discount_percentage: discountPercentage,
           justification: justification
-        },
-        priority: 'high',
-        action_url: `/QuoteCreator?id=${quoteId}`
+        }),
+        Priority: 'high',
+        IsRead: false,
+        ActionUrl: `/QuoteCreator?id=${quoteId}`
       }));
 
       // Create notifications
       for (const notification of notifications) {
         await Notification.create(notification);
-        console.log('Notification created for user:', notification.recipient_user_id);
+        console.log('Notification created for user:', notification.RecipientUserId);
       }
 
       console.log('All discount request notifications sent successfully');
@@ -117,19 +118,20 @@ export const NotificationService = {
       }
 
       const notification = {
-        recipient_user_id: finalRecipientUserId,
-        sender_user_id: approverUserId,
-        type: decision === 'approved' ? 'discount_approved' : 'discount_rejected',
-        title: `Discount ${decision === 'approved' ? 'Approved' : 'Rejected'}: ${quoteName}`,
-        message: `Your ${discountPercentage}% discount request for ${discountType} on quote ${quoteName} has been ${decision}. ${approverNotes ? 'Notes: ' + approverNotes : ''}`,
-        data: {
+        RecipientUserId: finalRecipientUserId,
+        SenderUserId: approverUserId,
+        Type: decision === 'approved' ? 'discount_approved' : 'discount_rejected',
+        Title: `Discount ${decision === 'approved' ? 'Approved' : 'Rejected'}: ${quoteName}`,
+        Message: `Your ${discountPercentage}% discount request for ${discountType} on quote ${quoteName} has been ${decision}. ${approverNotes ? 'Notes: ' + approverNotes : ''}`,
+        Data: JSON.stringify({
           quote_id: quoteId,
           discount_type: discountType,
           discount_percentage: discountPercentage,
           decision: decision
-        },
-        priority: 'medium',
-        action_url: `/QuoteCreator?id=${quoteId}`
+        }),
+        Priority: 'medium',
+        IsRead: false,
+        ActionUrl: `/QuoteCreator?id=${quoteId}`
       };
 
       await Notification.create(notification);

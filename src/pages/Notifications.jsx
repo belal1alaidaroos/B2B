@@ -42,7 +42,7 @@ export default function NotificationsPage() {
     setError(null);
     try {
       // **FIX: Added a limit of 100 to prevent timeouts on large datasets.**
-      const userNotifications = await Notification.filter({ recipient_user_id: userId }, '-created_date', 100);
+      const userNotifications = await Notification.filter({ RecipientUserId: userId }, '-created_date', 100);
       setNotifications(userNotifications || []);
     } catch (err) {
       console.error("Full error object on Notifications page:", err);
@@ -55,30 +55,31 @@ export default function NotificationsPage() {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await Notification.update(notificationId, { is_read: true, read_at: new Date().toISOString() });
-      // Optimistic UI update
-      setNotifications(prev => prev.map(n => n.id === notificationId ? {...n, is_read: true} : n));
+      await Notification.update(notificationId, { IsRead: true, ReadAt: new Date().toISOString() });
+      // Update local state
+      setNotifications(prev => prev.map(n => n.id === notificationId ? {...n, IsRead: true} : n));
     } catch (error) {
-      console.error("Error marking notification as read:", error);
-      // Optionally revert UI on error
+      console.error('Failed to mark notification as read:', error);
     }
   };
-  
+
   const handleMarkAllAsRead = async () => {
-    const unreadNotifications = notifications.filter(n => !n.is_read);
-    if(unreadNotifications.length === 0) return;
+    const unreadNotifications = notifications.filter(n => !n.IsRead);
+    if (unreadNotifications.length === 0) return;
 
-    // Optimistic UI update
-    setNotifications(prev => prev.map(n => ({...n, is_read: true})));
-
+    setIsLoading(true);
+    setNotifications(prev => prev.map(n => ({...n, IsRead: true})));
+    
     try {
       await Promise.all(
-        unreadNotifications.map(n => Notification.update(n.id, { is_read: true, read_at: new Date().toISOString() }))
+        unreadNotifications.map(n => Notification.update(n.id, { IsRead: true, ReadAt: new Date().toISOString() }))
       );
     } catch (error) {
-      console.error("Error marking all as read:", error);
-      // Revert UI on error
-      loadNotifications(currentUser.id);
+      console.error('Failed to mark all notifications as read:', error);
+      // Revert local changes on error
+      await loadNotifications(currentUser.id);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,7 +95,7 @@ export default function NotificationsPage() {
   };
 
   const handleNotificationClick = (notification) => {
-    if (!notification.is_read) {
+    if (!notification.IsRead) {
       handleMarkAsRead(notification.id);
     }
     if (notification.action_url) {
@@ -102,7 +103,10 @@ export default function NotificationsPage() {
     }
   };
   
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (notification) => {
+    if (!notification.IsRead) {
+      return <Badge variant="default" className="bg-blue-500 text-white">New</Badge>;
+    }
     const icons = {
       discount_request: <Info className="text-blue-500" />,
       discount_approved: <CheckCheck className="text-green-500" />,
@@ -111,7 +115,7 @@ export default function NotificationsPage() {
       communication_received: <Mail className="text-gray-500" />,
       default: <Bell className="text-gray-500" />,
     };
-    return icons[type] || icons.default;
+    return icons[notification.type] || icons.default;
   };
   
   if (!currentUser && isLoading) {
@@ -138,7 +142,7 @@ export default function NotificationsPage() {
             <ProtectedComponent module="notifications" action="update">
               <Button 
                 onClick={handleMarkAllAsRead} 
-                disabled={isLoading || notifications.filter(n => !n.is_read).length === 0}
+                disabled={isLoading || notifications.filter(n => !n.IsRead).length === 0}
               >
                 <CheckCheck className="w-4 h-4 mr-2" />
                 Mark All as Read
@@ -189,14 +193,14 @@ export default function NotificationsPage() {
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     className={`flex items-start gap-4 p-4 border rounded-lg transition-all duration-200 cursor-pointer ${
-                      notification.is_read ? 'bg-white hover:bg-gray-50' : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                      notification.IsRead ? 'bg-white hover:bg-gray-50' : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
                     }`}
                   >
-                    <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification.type)}</div>
+                    <div className="flex-shrink-0 mt-1">{getNotificationIcon(notification)}</div>
                     <div className="flex-grow">
                       <div className="flex justify-between items-center">
                         <h4 className="font-semibold text-gray-800">{notification.title}</h4>
-                        {!notification.is_read && (
+                        {!notification.IsRead && (
                           <Badge variant="default" className="bg-blue-500 text-white">New</Badge>
                         )}
                       </div>
