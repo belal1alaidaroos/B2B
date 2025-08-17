@@ -171,6 +171,168 @@ app.MapGet("/health", () => new { Status = "Healthy", Timestamp = DateTime.UtcNo
 
 app.Run();
 
+// Essential data seeding method
+static async System.Threading.Tasks.Task SeedEssentialDataAsync(ApplicationDbContext context, ILogger logger)
+{
+    var now = DateTime.UtcNow;
+    
+    // Seed roles if they don't exist
+    if (!context.Roles.Any())
+    {
+        logger.LogInformation("Seeding default roles...");
+        
+        var roles = new[]
+        {
+            new Role
+            {
+                Id = "role_admin",
+                Name = "admin",
+                DisplayName = "Administrator",
+                Description = "Full system access",
+                Permissions = "[\"*\"]",
+                IsActive = true,
+                IsSystemRole = true,
+                Priority = 100,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Role
+            {
+                Id = "role_user",
+                Name = "user",
+                DisplayName = "User",
+                Description = "Standard user access",
+                Permissions = "[\"read\", \"update_own\"]",
+                IsActive = true,
+                IsSystemRole = true,
+                Priority = 10,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Role
+            {
+                Id = "role_manager",
+                Name = "manager",
+                DisplayName = "Manager",
+                Description = "Manager level access",
+                Permissions = "[\"read\", \"create\", \"update\", \"delete_own\"]",
+                IsActive = true,
+                IsSystemRole = true,
+                Priority = 50,
+                CreatedAt = now,
+                UpdatedAt = now
+            }
+        };
+        
+        context.Roles.AddRange(roles);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Roles seeded successfully");
+    }
+    
+    // Seed system settings if they don't exist
+    if (!context.SystemSettings.Any())
+    {
+        logger.LogInformation("Seeding system settings...");
+        
+        var settings = new[]
+        {
+            new SystemSetting
+            {
+                Id = "sys_currency",
+                Key = "default_currency",
+                Value = "AED",
+                Description = "Default system currency",
+                Category = "general",
+                IsPublic = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new SystemSetting
+            {
+                Id = "sys_timezone",
+                Key = "default_timezone",
+                Value = "Asia/Dubai",
+                Description = "Default system timezone",
+                Category = "general",
+                IsPublic = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new SystemSetting
+            {
+                Id = "sys_language",
+                Key = "default_language",
+                Value = "en",
+                Description = "Default system language",
+                Category = "general",
+                IsPublic = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            }
+        };
+        
+        context.SystemSettings.AddRange(settings);
+        await context.SaveChangesAsync();
+        logger.LogInformation("System settings seeded successfully");
+    }
+    
+    // Seed countries if they don't exist
+    if (!context.Countries.Any())
+    {
+        logger.LogInformation("Seeding countries...");
+        
+        var countries = new[]
+        {
+            new Country
+            {
+                Id = "country_ae",
+                Name = "United Arab Emirates",
+                Code = "AE",
+                Code3 = "ARE",
+                PhoneCode = "+971",
+                Currency = "AED",
+                CurrencyCode = "AED",
+                TimeZone = "Asia/Dubai",
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Country
+            {
+                Id = "country_us",
+                Name = "United States",
+                Code = "US",
+                Code3 = "USA",
+                PhoneCode = "+1",
+                Currency = "USD",
+                CurrencyCode = "USD",
+                TimeZone = "America/New_York",
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Country
+            {
+                Id = "country_sa",
+                Name = "Saudi Arabia",
+                Code = "SA",
+                Code3 = "SAU",
+                PhoneCode = "+966",
+                Currency = "SAR",
+                CurrencyCode = "SAR",
+                TimeZone = "Asia/Riyadh",
+                IsActive = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            }
+        };
+        
+        context.Countries.AddRange(countries);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Countries seeded successfully");
+    }
+}
+
 // Database initialization method
 static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication app)
 {
@@ -235,6 +397,9 @@ static async System.Threading.Tasks.Task InitializeDatabaseAsync(WebApplication 
         {
             logger.LogInformation("Admin user already exists");
         }
+        
+        // Seed essential data (roles, countries, etc.)
+        await SeedEssentialDataAsync(context, logger);
     }
     catch (Exception ex)
     {

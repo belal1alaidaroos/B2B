@@ -54,8 +54,8 @@ namespace B2BBackend.Data
             // Configure default values and constraints
             ConfigureDefaults(modelBuilder);
 
-            // Seed initial data
-            SeedInitialData(modelBuilder);
+            // Note: Seeding moved to Program.cs to avoid dynamic date issues in migrations
+            // SeedInitialData(modelBuilder);
         }
 
         private void ConfigureDecimalPrecision(ModelBuilder modelBuilder)
@@ -259,6 +259,9 @@ namespace B2BBackend.Data
 
         private void SeedInitialData(ModelBuilder modelBuilder)
         {
+            // Use static date for seeding to avoid model changes warning
+            var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            
             // Seed default system settings
             modelBuilder.Entity<SystemSetting>().HasData(
                 new SystemSetting
