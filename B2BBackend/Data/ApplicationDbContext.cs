@@ -361,6 +361,66 @@ namespace B2BBackend.Data
                     UpdatedAt = DateTime.UtcNow
                 }
             );
+
+            // Seed some basic job profiles to prevent empty table issues
+            modelBuilder.Entity<JobProfile>().HasData(
+                new JobProfile
+                {
+                    Id = "jp_software_dev",
+                    Title = "Software Developer",
+                    Description = "Full-stack software development",
+                    Department = "IT",
+                    Level = "Mid-Level",
+                    RequiredSkills = "[\"C#\", \".NET\", \"React\", \"SQL\"]",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new JobProfile
+                {
+                    Id = "jp_project_mgr",
+                    Title = "Project Manager",
+                    Description = "Project management and coordination",
+                    Department = "Operations",
+                    Level = "Senior",
+                    RequiredSkills = "[\"Project Management\", \"Agile\", \"Leadership\"]",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                }
+            );
+
+            // Seed some basic jobs to prevent empty table issues
+            modelBuilder.Entity<Job>().HasData(
+                new Job
+                {
+                    Id = "job_dev_001",
+                    Title = "Senior Software Developer",
+                    Description = "Lead development of B2B applications",
+                    JobProfileId = "jp_software_dev",
+                    Status = "open",
+                    Priority = "high",
+                    Department = "IT",
+                    Location = "Dubai, UAE",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                },
+                new Job
+                {
+                    Id = "job_pm_001", 
+                    Title = "Technical Project Manager",
+                    Description = "Manage software development projects",
+                    JobProfileId = "jp_project_mgr",
+                    Status = "open",
+                    Priority = "medium",
+                    Department = "Operations", 
+                    Location = "Remote",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                }
+            );
         }
 
         public override int SaveChanges()
