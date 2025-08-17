@@ -25,13 +25,11 @@ namespace B2BBackend.Controllers
         {
             try
             {
-                var dbSet = GetDbSet(entityType);
-                if (dbSet == null)
+                var query = GetEntityQuery(entityType);
+                if (query == null)
                 {
                     return NotFound($"Entity type '{entityType}' not found");
                 }
-
-                var query = dbSet.AsQueryable();
                 
                 // Apply filtering if provided
                 if (!string.IsNullOrEmpty(filter))
@@ -62,13 +60,11 @@ namespace B2BBackend.Controllers
         {
             try
             {
-                var dbSet = GetDbSet(entityType);
-                if (dbSet == null)
+                var query = GetEntityQuery(entityType);
+                if (query == null)
                 {
                     return NotFound($"Entity type '{entityType}' not found");
                 }
-
-                var query = dbSet.AsQueryable();
                 
                 // Apply filters from the request
                 if (request.Filters != null && request.Filters.Any())
@@ -123,8 +119,7 @@ namespace B2BBackend.Controllers
                     baseEntity.UpdatedAt = DateTime.UtcNow;
                 }
 
-                var dbSet = GetDbSet(entityType);
-                dbSet.Add(entity);
+                AddEntityToContext(entityType, entity);
                 await _context.SaveChangesAsync();
 
                 await LogAuditAsync("create", entityType, entity.GetType().GetProperty("Id")?.GetValue(entity)?.ToString(), $"Created {entityType}");
@@ -143,8 +138,12 @@ namespace B2BBackend.Controllers
         {
             try
             {
-                var dbSet = GetDbSet(entityType);
-                var entity = await FindEntityById(dbSet, id);
+                var query = GetEntityQuery(entityType);
+                if (query == null)
+                {
+                    return NotFound($"Entity type '{entityType}' not found");
+                }
+                var entity = await FindEntityById(query, id);
                 
                 if (entity == null)
                 {
@@ -185,15 +184,19 @@ namespace B2BBackend.Controllers
         {
             try
             {
-                var dbSet = GetDbSet(entityType);
-                var entity = await FindEntityById(dbSet, id);
+                var query = GetEntityQuery(entityType);
+                if (query == null)
+                {
+                    return NotFound($"Entity type '{entityType}' not found");
+                }
+                var entity = await FindEntityById(query, id);
                 
                 if (entity == null)
                 {
                     return NotFound($"{entityType} with ID '{id}' not found");
                 }
 
-                dbSet.Remove(entity);
+                RemoveEntityFromContext(entityType, entity);
                 await _context.SaveChangesAsync();
 
                 await LogAuditAsync("delete", entityType, id, $"Deleted {entityType}");
@@ -212,8 +215,12 @@ namespace B2BBackend.Controllers
         {
             try
             {
-                var dbSet = GetDbSet(entityType);
-                var entity = await FindEntityById(dbSet, id);
+                var query = GetEntityQuery(entityType);
+                if (query == null)
+                {
+                    return NotFound($"Entity type '{entityType}' not found");
+                }
+                var entity = await FindEntityById(query, id);
                 
                 if (entity == null)
                 {
@@ -229,41 +236,113 @@ namespace B2BBackend.Controllers
         }
 
         // Helper methods
-        private DbSet<object>? GetDbSet(string entityType)
+        private IQueryable<object>? GetEntityQuery(string entityType)
         {
             return entityType.ToLower() switch
             {
-                "user" => _context.Users.Cast<object>().AsQueryable() as DbSet<object>,
-                "lead" => _context.Leads.Cast<object>().AsQueryable() as DbSet<object>,
-                "quote" => _context.Quotes.Cast<object>().AsQueryable() as DbSet<object>,
-                "account" => _context.Accounts.Cast<object>().AsQueryable() as DbSet<object>,
-                "contact" => _context.Contacts.Cast<object>().AsQueryable() as DbSet<object>,
-                "opportunity" => _context.Opportunities.Cast<object>().AsQueryable() as DbSet<object>,
-                "communication" => _context.Communications.Cast<object>().AsQueryable() as DbSet<object>,
-                "role" => _context.Roles.Cast<object>().AsQueryable() as DbSet<object>,
-                "job" => _context.Jobs.Cast<object>().AsQueryable() as DbSet<object>,
-                "jobprofile" => _context.JobProfiles.Cast<object>().AsQueryable() as DbSet<object>,
-                "country" => _context.Countries.Cast<object>().AsQueryable() as DbSet<object>,
-                "city" => _context.Cities.Cast<object>().AsQueryable() as DbSet<object>,
-                "territory" => _context.Territories.Cast<object>().AsQueryable() as DbSet<object>,
-                "branch" => _context.Branches.Cast<object>().AsQueryable() as DbSet<object>,
-                "department" => _context.Departments.Cast<object>().AsQueryable() as DbSet<object>,
-                "nationality" => _context.Nationalities.Cast<object>().AsQueryable() as DbSet<object>,
-                "skilllevel" => _context.SkillLevels.Cast<object>().AsQueryable() as DbSet<object>,
-                "costcomponent" => _context.CostComponents.Cast<object>().AsQueryable() as DbSet<object>,
-                "pricingrule" => _context.PricingRules.Cast<object>().AsQueryable() as DbSet<object>,
-                "task" => _context.Tasks.Cast<object>().AsQueryable() as DbSet<object>,
-                "notification" => _context.Notifications.Cast<object>().AsQueryable() as DbSet<object>,
-                "systemsetting" => _context.SystemSettings.Cast<object>().AsQueryable() as DbSet<object>,
-                "pricerequest" => _context.PriceRequests.Cast<object>().AsQueryable() as DbSet<object>,
-                "contract" => _context.Contracts.Cast<object>().AsQueryable() as DbSet<object>,
-                "salesmaterial" => _context.SalesMaterials.Cast<object>().AsQueryable() as DbSet<object>,
-                "auditlog" => _context.AuditLogs.Cast<object>().AsQueryable() as DbSet<object>,
-                "customerinteraction" => _context.CustomerInteractions.Cast<object>().AsQueryable() as DbSet<object>,
-                "customerresponsetemplate" => _context.CustomerResponseTemplates.Cast<object>().AsQueryable() as DbSet<object>,
-                "discountapprovalmatrix" => _context.DiscountApprovalMatrix.Cast<object>().AsQueryable() as DbSet<object>,
+                "user" => _context.Users.Cast<object>(),
+                "lead" => _context.Leads.Cast<object>(),
+                "quote" => _context.Quotes.Cast<object>(),
+                "account" => _context.Accounts.Cast<object>(),
+                "contact" => _context.Contacts.Cast<object>(),
+                "opportunity" => _context.Opportunities.Cast<object>(),
+                "communication" => _context.Communications.Cast<object>(),
+                "role" => _context.Roles.Cast<object>(),
+                "job" => _context.Jobs.Cast<object>(),
+                "jobprofile" => _context.JobProfiles.Cast<object>(),
+                "country" => _context.Countries.Cast<object>(),
+                "city" => _context.Cities.Cast<object>(),
+                "territory" => _context.Territories.Cast<object>(),
+                "branch" => _context.Branches.Cast<object>(),
+                "department" => _context.Departments.Cast<object>(),
+                "nationality" => _context.Nationalities.Cast<object>(),
+                "skilllevel" => _context.SkillLevels.Cast<object>(),
+                "costcomponent" => _context.CostComponents.Cast<object>(),
+                "pricingrule" => _context.PricingRules.Cast<object>(),
+                "task" => _context.Tasks.Cast<object>(),
+                "notification" => _context.Notifications.Cast<object>(),
+                "systemsetting" => _context.SystemSettings.Cast<object>(),
+                "pricerequest" => _context.PriceRequests.Cast<object>(),
+                "contract" => _context.Contracts.Cast<object>(),
+                "salesmaterial" => _context.SalesMaterials.Cast<object>(),
+                "auditlog" => _context.AuditLogs.Cast<object>(),
+                "customerinteraction" => _context.CustomerInteractions.Cast<object>(),
+                "customerresponsetemplate" => _context.CustomerResponseTemplates.Cast<object>(),
+                "discountapprovalmatrix" => _context.DiscountApprovalMatrix.Cast<object>(),
                 _ => null
             };
+        }
+
+        private void AddEntityToContext(string entityType, object entity)
+        {
+            switch (entityType.ToLower())
+            {
+                case "user": _context.Users.Add((User)entity); break;
+                case "lead": _context.Leads.Add((Lead)entity); break;
+                case "quote": _context.Quotes.Add((Quote)entity); break;
+                case "account": _context.Accounts.Add((Account)entity); break;
+                case "contact": _context.Contacts.Add((Contact)entity); break;
+                case "opportunity": _context.Opportunities.Add((Opportunity)entity); break;
+                case "communication": _context.Communications.Add((Communication)entity); break;
+                case "role": _context.Roles.Add((Role)entity); break;
+                case "job": _context.Jobs.Add((Job)entity); break;
+                case "jobprofile": _context.JobProfiles.Add((JobProfile)entity); break;
+                case "country": _context.Countries.Add((Country)entity); break;
+                case "city": _context.Cities.Add((City)entity); break;
+                case "territory": _context.Territories.Add((Territory)entity); break;
+                case "branch": _context.Branches.Add((Branch)entity); break;
+                case "department": _context.Departments.Add((Department)entity); break;
+                case "nationality": _context.Nationalities.Add((Nationality)entity); break;
+                case "skilllevel": _context.SkillLevels.Add((SkillLevel)entity); break;
+                case "costcomponent": _context.CostComponents.Add((CostComponent)entity); break;
+                case "pricingrule": _context.PricingRules.Add((PricingRule)entity); break;
+                case "task": _context.Tasks.Add((Models.Task)entity); break;
+                case "notification": _context.Notifications.Add((Notification)entity); break;
+                case "systemsetting": _context.SystemSettings.Add((SystemSetting)entity); break;
+                case "pricerequest": _context.PriceRequests.Add((PriceRequest)entity); break;
+                case "contract": _context.Contracts.Add((Contract)entity); break;
+                case "salesmaterial": _context.SalesMaterials.Add((SalesMaterial)entity); break;
+                case "auditlog": _context.AuditLogs.Add((AuditLog)entity); break;
+                case "customerinteraction": _context.CustomerInteractions.Add((CustomerInteraction)entity); break;
+                case "customerresponsetemplate": _context.CustomerResponseTemplates.Add((CustomerResponseTemplate)entity); break;
+                case "discountapprovalmatrix": _context.DiscountApprovalMatrix.Add((DiscountApprovalMatrix)entity); break;
+            }
+        }
+
+        private void RemoveEntityFromContext(string entityType, object entity)
+        {
+            switch (entityType.ToLower())
+            {
+                case "user": _context.Users.Remove((User)entity); break;
+                case "lead": _context.Leads.Remove((Lead)entity); break;
+                case "quote": _context.Quotes.Remove((Quote)entity); break;
+                case "account": _context.Accounts.Remove((Account)entity); break;
+                case "contact": _context.Contacts.Remove((Contact)entity); break;
+                case "opportunity": _context.Opportunities.Remove((Opportunity)entity); break;
+                case "communication": _context.Communications.Remove((Communication)entity); break;
+                case "role": _context.Roles.Remove((Role)entity); break;
+                case "job": _context.Jobs.Remove((Job)entity); break;
+                case "jobprofile": _context.JobProfiles.Remove((JobProfile)entity); break;
+                case "country": _context.Countries.Remove((Country)entity); break;
+                case "city": _context.Cities.Remove((City)entity); break;
+                case "territory": _context.Territories.Remove((Territory)entity); break;
+                case "branch": _context.Branches.Remove((Branch)entity); break;
+                case "department": _context.Departments.Remove((Department)entity); break;
+                case "nationality": _context.Nationalities.Remove((Nationality)entity); break;
+                case "skilllevel": _context.SkillLevels.Remove((SkillLevel)entity); break;
+                case "costcomponent": _context.CostComponents.Remove((CostComponent)entity); break;
+                case "pricingrule": _context.PricingRules.Remove((PricingRule)entity); break;
+                case "task": _context.Tasks.Remove((Models.Task)entity); break;
+                case "notification": _context.Notifications.Remove((Notification)entity); break;
+                case "systemsetting": _context.SystemSettings.Remove((SystemSetting)entity); break;
+                case "pricerequest": _context.PriceRequests.Remove((PriceRequest)entity); break;
+                case "contract": _context.Contracts.Remove((Contract)entity); break;
+                case "salesmaterial": _context.SalesMaterials.Remove((SalesMaterial)entity); break;
+                case "auditlog": _context.AuditLogs.Remove((AuditLog)entity); break;
+                case "customerinteraction": _context.CustomerInteractions.Remove((CustomerInteraction)entity); break;
+                case "customerresponsetemplate": _context.CustomerResponseTemplates.Remove((CustomerResponseTemplate)entity); break;
+                case "discountapprovalmatrix": _context.DiscountApprovalMatrix.Remove((DiscountApprovalMatrix)entity); break;
+            }
         }
 
         private IQueryable<object> ApplyFilter(IQueryable<object> query, string filter, string entityType)
@@ -351,9 +430,9 @@ namespace B2BBackend.Controllers
             }
         }
 
-        private async Task<object?> FindEntityById(DbSet<object> dbSet, string id)
+        private async Task<object?> FindEntityById(IQueryable<object> query, string id)
         {
-            return await dbSet.FirstOrDefaultAsync(e => EF.Property<string>(e, "Id") == id);
+            return await query.FirstOrDefaultAsync(e => EF.Property<string>(e, "Id") == id);
         }
 
         private Dictionary<string, object?> GetEntityValues(object entity)
