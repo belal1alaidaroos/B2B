@@ -13,10 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Configure Entity Framework with SQL Server
+// Configure Entity Framework with SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-                        "Server=localhost;Database=B2BDatabase;Trusted_Connection=true;TrustServerCertificate=true;"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
+                      "Data Source=B2BDatabase.db"));
 
 // Configure CORS for frontend communication
 builder.Services.AddCors(options =>
