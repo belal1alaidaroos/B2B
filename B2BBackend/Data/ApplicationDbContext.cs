@@ -119,6 +119,32 @@ namespace B2BBackend.Data
                 .Property(e => e.Percentage)
                 .HasPrecision(5, 2);
 
+            // Fix decimal precision warnings
+            modelBuilder.Entity<City>()
+                .Property(e => e.Latitude)
+                .HasPrecision(10, 6);
+            modelBuilder.Entity<City>()
+                .Property(e => e.Longitude)
+                .HasPrecision(10, 6);
+
+            modelBuilder.Entity<Department>()
+                .Property(e => e.Budget)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Job>()
+                .Property(e => e.BaseSalary)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<Job>()
+                .Property(e => e.MinSalary)
+                .HasPrecision(18, 2);
+            modelBuilder.Entity<Job>()
+                .Property(e => e.MaxSalary)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<SkillLevel>()
+                .Property(e => e.Multiplier)
+                .HasPrecision(5, 2);
+
             modelBuilder.Entity<Contract>()
                 .Property(e => e.ContractValue)
                 .HasPrecision(18, 2);
