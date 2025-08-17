@@ -11,14 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace B2BBackend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250817121153_InitialCreate")]
+    [Migration("20250817121855_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.1");
 
             modelBuilder.Entity("B2BBackend.Models.Account", b =>
                 {
