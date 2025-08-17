@@ -28,6 +28,14 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials();
     });
+    
+    // Add permissive CORS for development and testing tools (Swagger, Postman, etc.)
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
 // Configure JWT Authentication
@@ -139,9 +147,19 @@ if (app.Environment.IsDevelopment())
 // Initialize database and seed data
 await InitializeDatabaseAsync(app);
 
-app.UseHttpsRedirection();
+// Development-specific configuration
+if (app.Environment.IsDevelopment())
+{
+    // Allow HTTP in development for easier testing
+    // app.UseHttpsRedirection(); // Commented out for development
+}
+else
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseCors("AllowFrontend");
+// Use permissive CORS for development (allows Swagger, Postman, etc.)
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
